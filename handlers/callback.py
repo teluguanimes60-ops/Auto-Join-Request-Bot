@@ -1,65 +1,111 @@
 from pyrogram import Client
-from pyrogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import CallbackQuery
 
 from database import users, owners, channels, join_requests
 from utils.permissions import is_owner
-from utils.keyboards import owner_dashboard, user_dashboard
+from utils.keyboards import (
+    owner_dashboard,
+    user_dashboard,
+    channel_panel,
+    back_button
+)
 
 
 @Client.on_callback_query()
 async def callback_handler(client: Client, callback: CallbackQuery):
 
-    data = callback.data
     user = callback.from_user
+    data = callback.data
 
-    # Close
+    # ===============================
+    # CLOSE
+    # ===============================
+
     if data == "close":
         return await callback.message.delete()
 
-    # ---------------- USER ---------------- #
+    # ===============================
+    # USER DASHBOARD
+    # ===============================
 
-    elif data == "user_dashboard":
+    if data == "user_dashboard":
+
         return await callback.message.edit_text(
-            f"👋 Welcome {user.first_name}",
+            f"👋 Hello {user.first_name}\n\n"
+            "Welcome to AutoJoinBot.",
             reply_markup=user_dashboard()
         )
 
-    elif data == "profile":
+    # ===============================
+    # PROFILE
+    # ===============================
+
+    if data == "profile":
 
         text = f"""
 👤 Profile
 
 Name : {user.first_name}
 
-ID : `{user.id}`
+Username : @{user.username or "None"}
 
-Username : @{user.username or 'None'}
+User ID :
+`{user.id}`
 """
 
         return await callback.message.edit_text(
             text,
-            reply_markup=user_dashboard()
+            reply_markup=back_button("user_dashboard")
         )
 
-    elif data == "about":
+    # ===============================
+    # ABOUT
+    # ===============================
 
-        return await callback.answer(
-            "AutoJoinBot Version 1.0",
-            show_alert=True
+    if data == "about":
+
+        return await callback.message.edit_text(
+            """
+🤖 AutoJoinBot
+
+Version : 1.0
+
+Features
+
+• Auto Join Approve
+
+• Unlimited Channels
+
+• Unlimited Owners
+
+• MongoDB
+
+• Render Ready
+
+• GitHub Ready
+""",
+            reply_markup=back_button("user_dashboard")
         )
 
-    elif data == "support":
+    # ===============================
+    # SUPPORT
+    # ===============================
+
+    if data == "support":
 
         return await callback.answer(
             "Support Coming Soon.",
             show_alert=True
         )
 
-    # ---------------- OWNER ---------------- #
+    # ===============================
+    # OWNER PANEL
+    # ===============================
 
-    elif data == "owner_panel":
+    if data == "owner_panel":
 
         if not await is_owner(user.id):
+
             return await callback.answer(
                 "Access Denied",
                 show_alert=True
@@ -70,132 +116,149 @@ Username : @{user.username or 'None'}
             reply_markup=owner_dashboard()
         )
 
-    elif data == "stats":
+    # ===============================
+    # STATISTICS
+    # ===============================
+
+    if data == "stats":
 
         if not await is_owner(user.id):
             return
 
+        total_users = await users.count_documents({})
+        total_channels = await channels.count_documents({})
+        total_requests = await join_requests.count_documents({})
+        total_owners = await owners.count_documents({})
+
         text = f"""
-📊 Statistics
+📊 Bot Statistics
 
-👥 Users : {await users.count_documents({})}
+👥 Users :
+{total_users}
 
-👑 Owners : {await owners.count_documents({})}
+👑 Owners :
+{total_owners}
 
-📢 Channels : {await channels.count_documents({})}
+📢 Channels :
+{total_channels}
 
-📥 Requests : {await join_requests.count_documents({})}
+📥 Join Requests :
+{total_requests}
 """
 
         return await callback.message.edit_text(
             text,
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("⬅ Back", callback_data="owner_panel")]]
-            )
+            reply_markup=back_button("owner_panel")
         )
 
-    elif data == "owners":
+    # ===============================
+    # OWNERS
+    # ===============================
+
+    if data == "owners":
 
         if not await is_owner(user.id):
             return
 
-        owner_text = ""
+        text = "👑 Owners\n\n"
 
         async for owner in owners.find():
 
-            owner_text += f"• `{owner['user_id']}`\n"
-
-        if owner_text == "":
-            owner_text = "No Owners"
+            text += f"• `{owner['user_id']}`\n"
 
         return await callback.message.edit_text(
-            "👥 Owners\n\n" + owner_text,
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("⬅ Back", callback_data="owner_panel")]]
-            )
+            text,
+            reply_markup=back_button("owner_panel")
         )
 
-    elif data == "channels":
+    # ===============================
+    # CHANNELS
+    # ===============================
+
+    if data == "channels":
 
         if not await is_owner(user.id):
             return
 
-        text = "📢 Channel Manager\n\n"
+        text = "📢 Connected Channels\n\n"
 
-        total = 0
+        count = 0
 
         async for channel in channels.find():
 
-            total += 1
+            count += 1
 
-            text += f"• {channel.get('title','Unknown')}\n"
-            text += f"`{channel['chat_id']}`\n\n"
+            text += (
+                f"• {channel.get('title','Unknown')}\n"
+                f"`{channel['chat_id']}`\n\n"
+            )
 
-        if total == 0:
+        if count == 0:
             text += "No channels connected."
-
-        keyboard = InlineKeyboardMarkup(
-            [
-                [
-                    InlineKeyboardButton(
-                        "➕ How to Add Channel",
-                        callback_data="add_channel"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        "⬅ Back",
-                        callback_data="owner_panel"
-                    )
-                ]
-            ]
-        )
 
         return await callback.message.edit_text(
             text,
-            reply_markup=keyboard
+            reply_markup=channel_panel()
         )
 
-    elif data == "add_channel":
+    # ===============================
+    # ADD CHANNEL
+    # ===============================
+
+    if data == "add_channel":
 
         text = """
-📢 Add a Channel
+📢 How To Add Channel
 
-1️⃣ Add this bot as Admin.
+1️⃣ Add the bot as Admin.
 
-2️⃣ Enable
+2️⃣ Give permission:
 
-✅ Manage Chat Join Requests
+✅ Manage Join Requests
 
 3️⃣ Send one Join Request.
 
-The bot will automatically register the channel.
+Done.
+
+The bot registers the channel automatically.
 """
 
         return await callback.message.edit_text(
             text,
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("⬅ Back", callback_data="channels")]]
-            )
+            reply_markup=back_button("channels")
         )
 
-    elif data in [
-        "analytics",
-        "settings",
-        "welcome",
-        "delay",
-        "broadcast",
-        "backup",
-        "logs",
-        "health",
-        "bot_info"
-    ]:
+    # ===============================
+    # BOT INFO
+    # ===============================
 
-        return await callback.answer(
-            "🚧 This feature will be added next.",
-            show_alert=True
+    if data == "bot_info":
+
+        text = """
+🤖 AutoJoinBot
+
+Version : 1.0
+
+Python
+
+Pyrogram
+
+MongoDB
+
+Render
+
+GitHub
+
+Made with ❤️
+"""
+
+        return await callback.message.edit_text(
+            text,
+            reply_markup=back_button("owner_panel")
         )
 
-    else:
+    # ===============================
+    # UNKNOWN
+    # ===============================
 
-        return await callback.answer("Unknown Button")
+    return await callback.answer("Unknown Button")
