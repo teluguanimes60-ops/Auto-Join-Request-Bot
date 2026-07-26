@@ -27,43 +27,38 @@ async def run_bot():
 
         load_handlers()
 
-    print("Starting Telegram client...")
-
-    try:
+        print("Starting Telegram client...")
         await app.start()
-        print("Telegram client connected.")
-    except Exception as e:
-        print("Telegram Error:", e)
-        raise
-
-        print("✅ Telegram client started.")
+        print("✅ Telegram client connected.")
 
         me = await app.get_me()
 
         print("=" * 50)
-        print(f"🤖 {me.first_name}")
+        print(f"🤖 {me.first_name} Started")
         print(f"👤 @{me.username}")
         print("=" * 50)
 
-        await app.idle()
+        await asyncio.Event().wait()
 
-    except Exception as e:
+    except Exception:
         print("\n" + "=" * 50)
         print("BOT START ERROR")
         print("=" * 50)
         traceback.print_exc()
         print("=" * 50)
+        raise
 
 
 async def run_web():
-    config_uvicorn = uvicorn.Config(
-        "web:app",
-        host=config.HOST,
-        port=config.PORT,
-        log_level="info",
+    server = uvicorn.Server(
+        uvicorn.Config(
+            "web:app",
+            host=config.HOST,
+            port=config.PORT,
+            log_level="info"
+        )
     )
 
-    server = uvicorn.Server(config_uvicorn)
     await server.serve()
 
 
