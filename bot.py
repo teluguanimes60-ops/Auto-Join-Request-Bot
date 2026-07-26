@@ -27,8 +27,14 @@ async def run_bot():
 
         load_handlers()
 
-        print("Starting Telegram client...")
+    print("Starting Telegram client...")
+
+    try:
         await app.start()
+        print("Telegram client connected.")
+    except Exception as e:
+        print("Telegram Error:", e)
+        raise
 
         print("✅ Telegram client started.")
 
