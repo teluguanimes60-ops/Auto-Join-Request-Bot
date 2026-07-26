@@ -1,27 +1,18 @@
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
 
-app = FastAPI(
-    title="AutoJoinBot",
-    version="1.0.0"
-)
+app = FastAPI()
 
 
 @app.get("/")
 async def home():
-    return JSONResponse(
-        {
-            "status": "running",
-            "bot": "AutoJoinBot",
-            "message": "Bot is online."
-        }
-    )
+    return {
+        "status": "running",
+        "bot": "Auto Join Request Bot"
+    }
 
 
 @app.get("/health")
 async def health():
-    return JSONResponse(
-        {
-            "status": "healthy"
-        }
-    )
+    return {
+        "status": "healthy"
+    }
