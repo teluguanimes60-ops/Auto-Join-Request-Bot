@@ -1,13 +1,10 @@
 from datetime import datetime
 
 from pyrogram import Client, filters
-from pyrogram.types import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    Message
-)
+from pyrogram.types import Message
 
 from database import users, owners
+from utils.keyboards import owner_dashboard, user_dashboard
 
 
 @Client.on_message(filters.private & filters.command("start"))
@@ -32,70 +29,37 @@ async def start_handler(client: Client, message: Message):
         upsert=True
     )
 
-    # Check Owner
+    # Check if user is an Owner
     is_owner = await owners.find_one({"user_id": user.id})
 
     if is_owner:
-        keyboard = InlineKeyboardMarkup(
-            [
-                [
-                    InlineKeyboardButton(
-                        "👑 Owner Panel",
-                        callback_data="owner_panel"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        "📊 Statistics",
-                        callback_data="statistics"
-                    ),
-                    InlineKeyboardButton(
-                        "⚙ Settings",
-                        callback_data="settings"
-                    )
-                ]
-            ]
-        )
-
         text = f"""
-👋 Welcome **{user.first_name}**
+👋 Hello, **{user.first_name}**!
 
-You are an **Owner** of AutoJoinBot.
+Welcome to **AutoJoinBot**.
 
-Use the panel below to manage the bot.
+You are an **Owner** of this bot.
+
+Use the dashboard below to manage everything.
 """
 
-    else:
-        keyboard = InlineKeyboardMarkup(
-            [
-                [
-                    InlineKeyboardButton(
-                        "👤 My Dashboard",
-                        callback_data="user_dashboard"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        "ℹ About",
-                        callback_data="about"
-                    ),
-                    InlineKeyboardButton(
-                        "🆘 Support",
-                        callback_data="support"
-                    )
-                ]
-            ]
+        await message.reply_text(
+            text=text,
+            reply_markup=owner_dashboard()
         )
 
+    else:
         text = f"""
-👋 Welcome **{user.first_name}**
+👋 Hello, **{user.first_name}**!
+
+Welcome to **AutoJoinBot**.
 
 This bot automatically manages Telegram join requests.
 
-Use the buttons below.
+Use the dashboard below.
 """
 
-    await message.reply_text(
-        text,
-        reply_markup=keyboard
-    )
+        await message.reply_text(
+            text=text,
+            reply_markup=user_dashboard()
+        )
