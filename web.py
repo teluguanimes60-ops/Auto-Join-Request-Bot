@@ -1,12 +1,15 @@
 from fastapi import FastAPI
 
-app = FastAPI()
+app = FastAPI(
+    title="Auto Join Request Bot",
+    version="1.0.0"
+)
 
 
 @app.get("/")
-async def home():
+async def root():
     return {
-        "status": "running",
+        "status": "online",
         "bot": "Auto Join Request Bot"
     }
 
@@ -14,5 +17,13 @@ async def home():
 @app.get("/health")
 async def health():
     return {
-        "status": "healthy"
+        "status": "healthy",
+        "message": "Bot is running"
+    }
+
+
+@app.get("/ping")
+async def ping():
+    return {
+        "ping": "pong"
     }
