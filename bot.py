@@ -24,8 +24,15 @@ async def start_bot():
 
     load_handlers()
 
+    print("Starting Telegram client...")
+
     await app.start()
 
+    print("Telegram client started!")
+
+    me = await app.get_me()
+
+    print(f"Bot: @{me.username}")
     me = await app.get_me()
 
     print("=" * 50)
