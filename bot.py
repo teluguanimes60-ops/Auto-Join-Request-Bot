@@ -1,4 +1,6 @@
 import asyncio
+import importlib
+import pkgutil
 import uvicorn
 
 from loader import app
@@ -6,25 +8,37 @@ from database import setup_database
 from config import config
 
 
+def load_handlers():
+    """Automatically import all handler modules."""
+    import handlers
+
+    for module in pkgutil.iter_modules(handlers.__path__):
+        importlib.import_module(f"handlers.{module.name}")
+
+    print("✅ Handlers Loaded")
+
+
 async def start_bot():
-    """Start the Telegram bot."""
     await setup_database()
+
+    # Load all handlers
+    load_handlers()
 
     await app.start()
 
     me = await app.get_me()
 
     print("=" * 50)
-    print(f"✅ {me.first_name} Started Successfully")
-    print(f"🤖 Username : @{me.username}")
-    print(f"🆔 Bot ID   : {me.id}")
+    print(f"🤖 Bot Started Successfully")
+    print(f"👤 Name : {me.first_name}")
+    print(f"🔗 Username : @{me.username}")
+    print(f"🆔 ID : {me.id}")
     print("=" * 50)
 
     await asyncio.Event().wait()
 
 
 async def start_web():
-    """Start the FastAPI server for Render."""
     server = uvicorn.Server(
         uvicorn.Config(
             "web:app",
@@ -33,7 +47,6 @@ async def start_web():
             log_level="info"
         )
     )
-
     await server.serve()
 
 
@@ -45,7 +58,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("Bot stopped.")
+    asyncio.run(main())
