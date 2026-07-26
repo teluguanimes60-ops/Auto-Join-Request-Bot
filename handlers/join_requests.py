@@ -2,13 +2,13 @@ import asyncio
 from datetime import datetime
 
 from pyrogram import Client
-from pyrogram.handlers import ChatJoinRequestHandler
 from pyrogram.types import ChatJoinRequest
 
 from database import channels, join_requests
 
 
-async def handle_join_request(client: Client, request: ChatJoinRequest):
+@Client.on_chat_join_request()
+async def join_request_handler(client: Client, request: ChatJoinRequest):
     chat = request.chat
     user = request.from_user
 
@@ -17,19 +17,13 @@ async def handle_join_request(client: Client, request: ChatJoinRequest):
         {"chat_id": chat.id}
     )
 
-    # If channel isn't registered, approve immediately
-    if not channel:
-        await request.approve()
-        return
+    # Default settings
+    delay = 0
+    auto_approve = True
 
-    # Get delay (seconds)
-    delay = int(channel.get("delay", 0))
-
-    if delay > 0:
-        await asyncio.sleep(delay)
-
-    # Approve request
-    await request.approve()
+    if channel:
+        delay = int(channel.get("delay", 0))
+        auto_approve = channel.get("auto_approve", True)
 
     # Save request
     await join_requests.update_one(
@@ -40,25 +34,40 @@ async def handle_join_request(client: Client, request: ChatJoinRequest):
         {
             "$set": {
                 "chat_title": chat.title,
+                "chat_username": chat.username,
+                "user_id": user.id,
                 "username": user.username,
                 "first_name": user.first_name,
-                "approved": True,
-                "approved_at": datetime.utcnow()
-            },
-            "$setOnInsert": {
+                "status": "pending",
                 "requested_at": datetime.utcnow()
             }
         },
         upsert=True
     )
 
-    print(
-        f"Approved {user.id} -> {chat.title}"
+    if not auto_approve:
+        return
+
+    if delay > 0:
+        await asyncio.sleep(delay)
+
+    # Approve request
+    await request.approve()
+
+    # Update status
+    await join_requests.update_one(
+        {
+            "chat_id": chat.id,
+            "user_id": user.id
+        },
+        {
+            "$set": {
+                "status": "approved",
+                "approved_at": datetime.utcnow()
+            }
+        }
     )
 
-
-app = Client.get_instance()
-
-app.add_handler(
-    ChatJoinRequestHandler(handle_join_request)
-)
+    print(
+        f"✅ Approved {user.first_name} ({user.id}) -> {chat.title}"
+    )
