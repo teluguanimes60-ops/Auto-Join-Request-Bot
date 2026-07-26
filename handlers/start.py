@@ -1,65 +1,43 @@
-from datetime import datetime
+from pyrogram import filters
+from pyrogram.types import (
+    InlineKeyboardMarkup,
+    InlineKeyboardButton
+)
 
-from pyrogram import Client, filters
-from pyrogram.types import Message
-
-from database import users, owners
-from utils.keyboards import owner_dashboard, user_dashboard
+from loader import app
 
 
-@Client.on_message(filters.private & filters.command("start"))
-async def start_handler(client: Client, message: Message):
-    user = message.from_user
+@app.on_message(filters.private & filters.command("start"))
+async def start_command(client, message):
 
-    # Save or Update User
-    await users.update_one(
-        {"user_id": user.id},
-        {
-            "$set": {
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "username": user.username,
-                "is_bot": user.is_bot,
-                "last_seen": datetime.utcnow()
-            },
-            "$setOnInsert": {
-                "joined_at": datetime.utcnow()
-            }
-        },
-        upsert=True
+    buttons = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    "➕ Add Me To Channel",
+                    url="https://t.me/YourBot?startchannel"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "📖 Help",
+                    callback_data="help"
+                ),
+                InlineKeyboardButton(
+                    "ℹ️ About",
+                    callback_data="about"
+                )
+            ]
+        ]
     )
 
-    # Check if user is an Owner
-    is_owner = await owners.find_one({"user_id": user.id})
+    await message.reply_text(
+        f"""👋 Hello {message.from_user.mention}!
 
-    if is_owner:
-        text = f"""
-👋 Hello, **{user.first_name}**!
+Welcome to **Auto Join Request Bot**.
 
-Welcome to **AutoJoinBot**.
+I can automatically approve join requests.
 
-You are an **Owner** of this bot.
-
-Use the dashboard below to manage everything.
-"""
-
-        await message.reply_text(
-            text=text,
-            reply_markup=owner_dashboard()
-        )
-
-    else:
-        text = f"""
-👋 Hello, **{user.first_name}**!
-
-Welcome to **AutoJoinBot**.
-
-This bot automatically manages Telegram join requests.
-
-Use the dashboard below.
-"""
-
-        await message.reply_text(
-            text=text,
-            reply_markup=user_dashboard()
-        )
+Choose an option below.""",
+        reply_markup=buttons
+    )
