@@ -243,3 +243,49 @@ async def get_stats():
         "channels": await total_channels(),
         "logs": await logs_col.count_documents({})
     }
+
+# ==========================================================
+# CHANNEL EXISTS
+# ==========================================================
+
+async def channel_exists(channel_id):
+
+    return await channels_col.find_one(
+        {
+            "channel_id": channel_id
+        }
+    )
+
+
+# ==========================================================
+# UPDATE CHANNEL
+# ==========================================================
+
+async def update_channel(channel_id, data):
+
+    await channels_col.update_one(
+        {
+            "channel_id": channel_id
+        },
+        {
+            "$set": data
+        }
+    )
+
+
+# ==========================================================
+# DELETE ALL LOGS
+# ==========================================================
+
+async def clear_logs():
+
+    await logs_col.delete_many({})
+
+
+# ==========================================================
+# TOTAL LOGS
+# ==========================================================
+
+async def total_logs():
+
+    return await logs_col.count_documents({})
