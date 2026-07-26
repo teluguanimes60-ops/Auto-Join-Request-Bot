@@ -211,3 +211,4 @@ async def callback_handler(client: Client, callback: CallbackQuery):
             await callback.message.delete()
         except Exception:
             pass
+
