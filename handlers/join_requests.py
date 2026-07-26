@@ -13,9 +13,7 @@ async def join_request_handler(client: Client, request: ChatJoinRequest):
     user = request.from_user
 
     # Get channel settings
-    channel = await channels.find_one(
-        {"chat_id": chat.id}
-    )
+    channel = await channels.find_one({"chat_id": chat.id})
 
     # Default settings
     delay = 0
@@ -48,26 +46,42 @@ async def join_request_handler(client: Client, request: ChatJoinRequest):
     if not auto_approve:
         return
 
+    # Delay before approval
     if delay > 0:
         await asyncio.sleep(delay)
 
-    # Approve request
-    await request.approve()
+    try:
+        await request.approve()
 
-    # Update status
-    await join_requests.update_one(
-        {
-            "chat_id": chat.id,
-            "user_id": user.id
-        },
-        {
-            "$set": {
-                "status": "approved",
-                "approved_at": datetime.utcnow()
+        await join_requests.update_one(
+            {
+                "chat_id": chat.id,
+                "user_id": user.id
+            },
+            {
+                "$set": {
+                    "status": "approved",
+                    "approved_at": datetime.utcnow()
+                }
             }
-        }
-    )
+        )
 
-    print(
-        f"✅ Approved {user.first_name} ({user.id}) -> {chat.title}"
-    )
+        print(f"✅ Approved {user.id} -> {chat.title}")
+
+    except Exception as e:
+
+        await join_requests.update_one(
+            {
+                "chat_id": chat.id,
+                "user_id": user.id
+            },
+            {
+                "$set": {
+                    "status": "failed",
+                    "error": str(e),
+                    "failed_at": datetime.utcnow()
+                }
+            }
+        )
+
+        print(f"❌ Failed to approve {user.id}: {e}")
