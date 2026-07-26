@@ -1,66 +1,159 @@
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from pyrogram.types import (
+    InlineKeyboardMarkup,
+    InlineKeyboardButton
+)
 
 
-def owner_dashboard():
-    return InlineKeyboardMarkup(
-        [
-            [
-                InlineKeyboardButton("📢 Channel Manager", callback_data="channels"),
-                InlineKeyboardButton("👥 Owner Manager", callback_data="owners")
-            ],
-            [
-                InlineKeyboardButton("📊 Statistics", callback_data="stats"),
-                InlineKeyboardButton("📈 Analytics", callback_data="analytics")
-            ],
-            [
-                InlineKeyboardButton("⚙ Settings", callback_data="settings"),
-                InlineKeyboardButton("🎉 Welcome", callback_data="welcome")
-            ],
-            [
-                InlineKeyboardButton("⏳ Join Delay", callback_data="delay"),
-                InlineKeyboardButton("📣 Broadcast", callback_data="broadcast")
-            ],
-            [
-                InlineKeyboardButton("💾 Backup", callback_data="backup"),
-                InlineKeyboardButton("📝 Logs", callback_data="logs")
-            ],
-            [
-                InlineKeyboardButton("❤️ Health", callback_data="health"),
-                InlineKeyboardButton("ℹ️ Bot Info", callback_data="bot_info")
-            ]
-        ]
-    )
-
+# ==========================
+# USER DASHBOARD
+# ==========================
 
 def user_dashboard():
     return InlineKeyboardMarkup(
         [
             [
-                InlineKeyboardButton("👤 My Profile", callback_data="profile")
+                InlineKeyboardButton(
+                    "👤 My Profile",
+                    callback_data="profile"
+                )
             ],
             [
-                InlineKeyboardButton("ℹ️ About", callback_data="about"),
-                InlineKeyboardButton("🆘 Support", callback_data="support")
+                InlineKeyboardButton(
+                    "ℹ️ About",
+                    callback_data="about"
+                ),
+                InlineKeyboardButton(
+                    "🆘 Support",
+                    callback_data="support"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "❌ Close",
+                    callback_data="close"
+                )
             ]
         ]
     )
 
 
-def back_to_owner():
+# ==========================
+# OWNER DASHBOARD
+# ==========================
+
+def owner_dashboard():
     return InlineKeyboardMarkup(
         [
             [
-                InlineKeyboardButton("⬅ Back", callback_data="owner_panel")
+                InlineKeyboardButton(
+                    "📢 Channels",
+                    callback_data="channels"
+                ),
+                InlineKeyboardButton(
+                    "👑 Owners",
+                    callback_data="owners"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "📊 Statistics",
+                    callback_data="stats"
+                ),
+                InlineKeyboardButton(
+                    "🤖 Bot Info",
+                    callback_data="bot_info"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "🏠 User Panel",
+                    callback_data="user_dashboard"
+                ),
+                InlineKeyboardButton(
+                    "❌ Close",
+                    callback_data="close"
+                )
             ]
         ]
     )
 
+
+# ==========================
+# BACK BUTTON
+# ==========================
+
+def back_button(callback="owner_panel"):
+    return InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    "⬅ Back",
+                    callback_data=callback
+                )
+            ]
+        ]
+    )
+
+
+# ==========================
+# CLOSE BUTTON
+# ==========================
 
 def close_button():
     return InlineKeyboardMarkup(
         [
             [
-                InlineKeyboardButton("❌ Close", callback_data="close")
+                InlineKeyboardButton(
+                    "❌ Close",
+                    callback_data="close"
+                )
+            ]
+        ]
+    )
+
+
+# ==========================
+# CHANNEL PANEL
+# ==========================
+
+def channel_panel():
+    return InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    "➕ Add Channel Guide",
+                    callback_data="add_channel"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "⬅ Back",
+                    callback_data="owner_panel"
+                )
+            ]
+        ]
+    )
+
+
+# ==========================
+# CONFIRM BUTTONS
+# ==========================
+
+def confirm_buttons(
+    yes="confirm_yes",
+    no="confirm_no"
+):
+    return InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    "✅ Yes",
+                    callback_data=yes
+                ),
+                InlineKeyboardButton(
+                    "❌ No",
+                    callback_data=no
+                )
             ]
         ]
     )
