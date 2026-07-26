@@ -5,19 +5,27 @@ def owner_dashboard():
     return InlineKeyboardMarkup(
         [
             [
-                InlineKeyboardButton("📢 Channels", callback_data="channels"),
-                InlineKeyboardButton("👥 Owners", callback_data="owners")
+                InlineKeyboardButton("📢 Channel Manager", callback_data="channels"),
+                InlineKeyboardButton("👥 Owner Manager", callback_data="owners")
             ],
             [
                 InlineKeyboardButton("📊 Statistics", callback_data="stats"),
+                InlineKeyboardButton("📈 Analytics", callback_data="analytics")
+            ],
+            [
+                InlineKeyboardButton("⚙ Settings", callback_data="settings"),
+                InlineKeyboardButton("🎉 Welcome", callback_data="welcome")
+            ],
+            [
+                InlineKeyboardButton("⏳ Join Delay", callback_data="delay"),
                 InlineKeyboardButton("📣 Broadcast", callback_data="broadcast")
             ],
             [
-                InlineKeyboardButton("⚙️ Settings", callback_data="settings"),
-                InlineKeyboardButton("🗄 Backup", callback_data="backup")
+                InlineKeyboardButton("💾 Backup", callback_data="backup"),
+                InlineKeyboardButton("📝 Logs", callback_data="logs")
             ],
             [
-                InlineKeyboardButton("📝 Logs", callback_data="logs"),
+                InlineKeyboardButton("❤️ Health", callback_data="health"),
                 InlineKeyboardButton("ℹ️ Bot Info", callback_data="bot_info")
             ]
         ]
@@ -28,25 +36,21 @@ def user_dashboard():
     return InlineKeyboardMarkup(
         [
             [
-                InlineKeyboardButton("👤 My Profile", callback_data="profile"),
-                InlineKeyboardButton("📋 My Requests", callback_data="my_requests")
+                InlineKeyboardButton("👤 My Profile", callback_data="profile")
             ],
             [
-                InlineKeyboardButton("✅ Joined Channels", callback_data="joined_channels")
-            ],
-            [
-                InlineKeyboardButton("🆘 Support", callback_data="support"),
-                InlineKeyboardButton("ℹ️ About", callback_data="about")
+                InlineKeyboardButton("ℹ️ About", callback_data="about"),
+                InlineKeyboardButton("🆘 Support", callback_data="support")
             ]
         ]
     )
 
 
-def back_button(data="home"):
+def back_to_owner():
     return InlineKeyboardMarkup(
         [
             [
-                InlineKeyboardButton("⬅️ Back", callback_data=data)
+                InlineKeyboardButton("⬅ Back", callback_data="owner_panel")
             ]
         ]
     )
@@ -57,17 +61,6 @@ def close_button():
         [
             [
                 InlineKeyboardButton("❌ Close", callback_data="close")
-            ]
-        ]
-    )
-
-
-def yes_no(confirm_data, cancel_data):
-    return InlineKeyboardMarkup(
-        [
-            [
-                InlineKeyboardButton("✅ Yes", callback_data=confirm_data),
-                InlineKeyboardButton("❌ No", callback_data=cancel_data)
             ]
         ]
     )
