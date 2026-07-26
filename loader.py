@@ -2,8 +2,10 @@ from pyrogram import Client
 from config import config
 
 app = Client(
-    "AutoJoinBot",
+    name="AutoJoinBot",
     api_id=config.API_ID,
     api_hash=config.API_HASH,
-    bot_token=config.BOT_TOKEN
+    bot_token=config.BOT_TOKEN,
+    workers=10,
+    sleep_threshold=30
 )
