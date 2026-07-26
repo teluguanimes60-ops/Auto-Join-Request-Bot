@@ -1,157 +1,176 @@
 from pyrogram import Client
 from pyrogram.types import CallbackQuery
 
-from utils.keyboards import (
-    owner_dashboard,
-    user_dashboard
-)
+from database import users, owners, channels, join_requests
+from utils.permissions import is_owner
+from utils.keyboards import owner_dashboard, user_dashboard
 
 
 @Client.on_callback_query()
 async def callback_handler(client: Client, callback: CallbackQuery):
+
     data = callback.data
     user = callback.from_user
 
-    # =========================
-    # Close Message
-    # =========================
+    # ==========================
+    # CLOSE
+    # ==========================
     if data == "close":
-        await callback.message.delete()
-        return
+        return await callback.message.delete()
 
-    # =========================
-    # Back to Home
-    # =========================
-    if data == "home":
-        await callback.message.edit_text(
-            f"👋 Welcome back, **{user.first_name}**!",
+    # ==========================
+    # USER HOME
+    # ==========================
+    elif data == "user_dashboard":
+
+        return await callback.message.edit_text(
+            f"👋 Welcome **{user.first_name}**",
             reply_markup=user_dashboard()
         )
-        return
 
-    # =========================
-    # Owner Dashboard
-    # =========================
-    if data == "owner_panel":
-        await callback.message.edit_text(
-            "👑 **Owner Dashboard**\n\n"
-            "Choose an option below.",
+    # ==========================
+    # OWNER HOME
+    # ==========================
+    elif data == "owner_panel":
+
+        if not await is_owner(user.id):
+            return await callback.answer(
+                "Access Denied",
+                show_alert=True
+            )
+
+        return await callback.message.edit_text(
+            "👑 **Owner Dashboard**",
             reply_markup=owner_dashboard()
         )
-        return
 
-    # =========================
-    # User Dashboard
-    # =========================
-    if data == "user_dashboard":
-        await callback.message.edit_text(
-            "👤 **User Dashboard**\n\n"
-            "Choose an option below.",
-            reply_markup=user_dashboard()
-        )
-        return
+    # ==========================
+    # STATISTICS
+    # ==========================
+    elif data == "stats":
 
-    # =========================
-    # Profile
-    # =========================
-    if data == "profile":
-        text = (
-            f"👤 **Your Profile**\n\n"
-            f"🆔 ID: `{user.id}`\n"
-            f"👤 Name: {user.first_name}\n"
-            f"📛 Username: @{user.username if user.username else 'None'}"
-        )
+        if not await is_owner(user.id):
+            return
 
-        await callback.message.edit_text(
+        total_users = await users.count_documents({})
+        total_channels = await channels.count_documents({})
+        total_requests = await join_requests.count_documents({})
+        total_owners = await owners.count_documents({})
+
+        text = f"""
+📊 **Statistics**
+
+👥 Users : `{total_users}`
+👑 Owners : `{total_owners}`
+📢 Channels : `{total_channels}`
+📥 Requests : `{total_requests}`
+"""
+
+        return await callback.message.edit_text(
             text,
-            reply_markup=user_dashboard()
+            reply_markup=owner_dashboard()
         )
-        return
 
-    # =========================
-    # About
-    # =========================
-    if data == "about":
-        await callback.answer(
-            "AutoJoinBot v1.0",
+    # ==========================
+    # OWNERS
+    # ==========================
+    elif data == "owners":
+
+        if not await is_owner(user.id):
+            return
+
+        owner_text = ""
+
+        async for owner in owners.find():
+            owner_text += f"• `{owner['user_id']}`\n"
+
+        if not owner_text:
+            owner_text = "No Owners."
+
+        return await callback.message.edit_text(
+            f"👑 **Owners**\n\n{owner_text}",
+            reply_markup=owner_dashboard()
+        )
+
+    # ==========================
+    # CHANNELS
+    # ==========================
+    elif data == "channels":
+
+        if not await is_owner(user.id):
+            return
+
+        total = await channels.count_documents({})
+
+        return await callback.message.edit_text(
+            f"📢 Connected Channels\n\nTotal : `{total}`",
+            reply_markup=owner_dashboard()
+        )
+
+    # ==========================
+    # BROADCAST
+    # ==========================
+    elif data == "broadcast":
+
+        return await callback.answer(
+            "Coming Soon",
             show_alert=True
         )
-        return
 
-    # =========================
-    # Support
-    # =========================
-    if data == "support":
-        await callback.answer(
-            "Support system coming soon.",
+    # ==========================
+    # SETTINGS
+    # ==========================
+    elif data == "settings":
+
+        return await callback.answer(
+            "Coming Soon",
             show_alert=True
         )
-        return
 
-    # =========================
-    # Statistics
-    # =========================
-    if data == "stats":
-        await callback.answer(
-            "Statistics panel coming soon.",
+    # ==========================
+    # BACKUP
+    # ==========================
+    elif data == "backup":
+
+        return await callback.answer(
+            "Coming Soon",
             show_alert=True
         )
-        return
 
-    # =========================
-    # Settings
-    # =========================
-    if data == "settings":
-        await callback.answer(
-            "Settings panel coming soon.",
+    # ==========================
+    # LOGS
+    # ==========================
+    elif data == "logs":
+
+        return await callback.answer(
+            "Coming Soon",
             show_alert=True
         )
-        return
 
-    # =========================
-    # Channels
-    # =========================
-    if data == "channels":
-        await callback.answer(
-            "Channel manager coming soon.",
-            show_alert=True
+    # ==========================
+    # BOT INFO
+    # ==========================
+    elif data == "bot_info":
+
+        text = """
+🤖 **AutoJoinBot**
+
+Version : 1.0
+
+Hosted on Render
+
+Database : MongoDB Atlas
+
+Framework : Pyrogram
+"""
+
+        return await callback.message.edit_text(
+            text,
+            reply_markup=owner_dashboard()
         )
-        return
 
-    # =========================
-    # Owners
-    # =========================
-    if data == "owners":
-        await callback.answer(
-            "Owner manager coming soon.",
-            show_alert=True
-        )
-        return
-
-    # =========================
-    # Broadcast
-    # =========================
-    if data == "broadcast":
-        await callback.answer(
-            "Broadcast system coming soon.",
-            show_alert=True
-        )
-        return
-
-    # =========================
-    # Backup
-    # =========================
-    if data == "backup":
-        await callback.answer(
-            "Backup system coming soon.",
-            show_alert=True
-        )
-        return
-
-    # =========================
-    # Unknown Callback
-    # =========================
-    await callback.answer(
-        "Unknown action.",
-        show_alert=True
-    )
+    # ==========================
+    # UNKNOWN
+    # ==========================
+    else:
+        return await callback.answer("Unknown Button")
