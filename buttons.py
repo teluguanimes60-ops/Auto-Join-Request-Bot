@@ -195,3 +195,89 @@ def close_button():
             )
         ]
     ])
+
+# ==========================================================
+# MY CHANNELS
+# ==========================================================
+
+def my_channels_buttons(channels):
+
+    rows = []
+
+    for channel in channels:
+
+        rows.append([
+            InlineKeyboardButton(
+                f"📺 {channel['title']}",
+                callback_data=f"channel_{channel['channel_id']}"
+            )
+        ])
+
+    if not rows:
+        rows.append([
+            InlineKeyboardButton(
+                "No Channels Added",
+                callback_data="ignore"
+            )
+        ])
+
+    rows.append([
+        InlineKeyboardButton(
+            "➕ Add Channel",
+            callback_data="add_channel"
+        )
+    ])
+
+    rows.append([
+        InlineKeyboardButton(
+            "⬅️ Back",
+            callback_data="start"
+        )
+    ])
+
+    return InlineKeyboardMarkup(rows)
+
+
+# ==========================================================
+# ENABLE / DISABLE
+# ==========================================================
+
+def enable_disable_button(channel_id, enabled):
+
+    if enabled:
+        text = "🔴 Disable Auto Accept"
+        callback = f"disable_{channel_id}"
+    else:
+        text = "🟢 Enable Auto Accept"
+        callback = f"enable_{channel_id}"
+
+    return InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton(
+                text,
+                callback_data=callback
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                "⬅️ Back",
+                callback_data=f"channel_{channel_id}"
+            )
+        ]
+    ])
+
+
+# ==========================================================
+# IGNORE
+# ==========================================================
+
+def ignore_button():
+
+    return InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton(
+                "•",
+                callback_data="ignore"
+            )
+        ]
+    ])
