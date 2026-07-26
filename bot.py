@@ -3,6 +3,7 @@ import importlib
 import pkgutil
 
 import uvicorn
+from pyrogram import idle
 
 from config import config
 from database import setup_database
@@ -13,14 +14,12 @@ def load_handlers():
     import handlers
 
     for module in pkgutil.iter_modules(handlers.__path__):
-        importlib.import_module(
-            f"handlers.{module.name}"
-        )
+        importlib.import_module(f"handlers.{module.name}")
 
-    print("✅ All handlers loaded.")
+    print("✅ All handlers loaded")
 
 
-async def run_bot():
+async def start_bot():
     await setup_database()
 
     load_handlers()
@@ -30,20 +29,23 @@ async def run_bot():
     me = await app.get_me()
 
     print("=" * 50)
-    print(f"🤖 {me.first_name} Started")
+    print(f"🤖 {me.first_name}")
     print(f"👤 @{me.username}")
+    print("✅ Bot Started Successfully")
     print("=" * 50)
 
-    await asyncio.Event().wait()
+    await idle()
+
+    await app.stop()
 
 
-async def run_web():
+async def start_web():
     server = uvicorn.Server(
         uvicorn.Config(
-            "web:app",
+            app="web:app",
             host=config.HOST,
             port=config.PORT,
-            log_level="info"
+            log_level="info",
         )
     )
 
@@ -52,8 +54,8 @@ async def run_web():
 
 async def main():
     await asyncio.gather(
-        run_bot(),
-        run_web()
+        start_bot(),
+        start_web()
     )
 
 
