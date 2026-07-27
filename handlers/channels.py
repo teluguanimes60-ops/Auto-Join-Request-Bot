@@ -61,10 +61,8 @@ async def add_channel_handler(client: Client, message: Message):
         if x.get("owner_id") == message.from_user.id
     ]
 
-    if len(user_channels) >= FREE_CHANNEL_LIMIT:
-        return await message.reply_text(
-            f"❌ Free users can add only {FREE_CHANNEL_LIMIT} channels."
-        )
+    # Unlimited channels for everyone
+    pass
 
     # Save channel
     await add_channel(chat)
