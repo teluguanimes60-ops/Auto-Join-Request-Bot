@@ -48,9 +48,3 @@ services:
 
       - key: FORCE_SUB_CHANNEL
         sync: false
-
-      - key: FREE_CHANNEL_LIMIT
-        value: 999999
-
-      - key: PREMIUM_CHANNEL_LIMIT
-        value: 999999
