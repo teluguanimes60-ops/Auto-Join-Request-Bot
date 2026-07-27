@@ -1,55 +1,49 @@
 import os
 from dotenv import load_dotenv
 
-# Load .env locally (ignored on Render if not present)
 load_dotenv()
 
-# ===========================
+# ==========================================================
 # Telegram API
-# ===========================
+# ==========================================================
 
 API_ID = int(os.getenv("API_ID", "0"))
 API_HASH = os.getenv("API_HASH", "")
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 
-# ===========================
-# Database
-# ===========================
+# ==========================================================
+# MongoDB
+# ==========================================================
 
 MONGO_URI = os.getenv("MONGO_URI", "")
+DATABASE_NAME = os.getenv("DATABASE_NAME", "AutoJoinBot")
 
-DATABASE_NAME = os.getenv(
-    "DATABASE_NAME",
-    "AutoJoinBot"
-)
-
-# ===========================
-# Owner
-# ===========================
+# ==========================================================
+# Bot Owner
+# ==========================================================
 
 OWNER_ID = int(os.getenv("OWNER_ID", "0"))
 
-# ===========================
-# Bot Settings
-# ===========================
+# ==========================================================
+# Bot Information
+# ==========================================================
 
 BOT_NAME = "Auto Join Request Bot"
 BOT_VERSION = "1.0.0"
 
-# Default approval delay (seconds)
-DEFAULT_DELAY = 60
+# ==========================================================
+# Defaults
+# ==========================================================
 
-# Auto delete temporary messages (seconds)
-AUTO_DELETE_TIME = 30
-
-# Maximum channels a normal user can add
+DEFAULT_DELAY = 60          # seconds
+AUTO_DELETE_TIME = 20       # seconds
 MAX_CHANNELS = 100
 
-# ===========================
+# ==========================================================
 # Validation
-# ===========================
+# ==========================================================
 
-required = {
+_required = {
     "API_ID": API_ID,
     "API_HASH": API_HASH,
     "BOT_TOKEN": BOT_TOKEN,
@@ -57,9 +51,10 @@ required = {
     "OWNER_ID": OWNER_ID,
 }
 
-missing = [key for key, value in required.items() if not value]
+_missing = [k for k, v in _required.items() if not v]
 
-if missing:
+if _missing:
     raise RuntimeError(
-        f"Missing required environment variables: {', '.join(missing)}"
+        "Missing environment variables: "
+        + ", ".join(_missing)
     )
