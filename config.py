@@ -52,8 +52,8 @@ LOG_CHANNEL = int(os.getenv("LOG_CHANNEL", "0"))
 # ===========================
 # Limits
 # ===========================
-FREE_CHANNEL_LIMIT = int(os.getenv("FREE_CHANNEL_LIMIT", "5"))
-PREMIUM_CHANNEL_LIMIT = int(os.getenv("PREMIUM_CHANNEL_LIMIT", "50"))
+FREE_CHANNEL_LIMIT = 999999
+PREMIUM_CHANNEL_LIMIT = 999999
 
 
 # ===========================
