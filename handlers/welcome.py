@@ -6,10 +6,6 @@ from database.models import (
     update_channel_setting,
 )
 
-# ==========================================================
-# Waiting Users
-# ==========================================================
-
 from utils.state import (
     set_state,
     get_state_data,
@@ -26,7 +22,11 @@ async def custom_welcome(client, query):
 
     channel_id = int(query.data.split("_")[-1])
 
-    WAITING[query.from_user.id] = channel_id
+    set_state(
+        query.from_user.id,
+        "welcome",
+        channel_id
+    )
 
     await query.message.edit_text(
         "💬 **Send your custom welcome message.**\n\n"
@@ -49,18 +49,20 @@ async def save_welcome(client, message: Message):
 
     user_id = message.from_user.id
 
-    if user_id not in WAITING:
+    if not has_state(user_id, "welcome"):
         return
 
     if message.text == "/cancel":
 
-        WAITING.pop(user_id)
+        clear_state(user_id)
 
         return await message.reply_text(
             "❌ Cancelled."
         )
+    
+    channel_id = get_state_data(user_id)
 
-    channel_id = WAITING.pop(user_id)
+    clear_state(user_id)
 
     channel = await get_channel(channel_id)
 
