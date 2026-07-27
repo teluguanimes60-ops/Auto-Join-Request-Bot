@@ -2,7 +2,7 @@
 Auto Join Request Bot
 Handlers Package
 """
-
+from . import about
 from . import start
 from . import callbacks
 from . import channels
@@ -19,4 +19,5 @@ __all__ = [
     "settings",
     "admin",
     "owner",
+    "about",
 ]
