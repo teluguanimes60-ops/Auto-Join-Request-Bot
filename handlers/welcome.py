@@ -10,8 +10,12 @@ from database.models import (
 # Waiting Users
 # ==========================================================
 
-WAITING = {}
-
+from utils.state import (
+    set_state,
+    get_state_data,
+    has_state,
+    clear_state,
+)
 
 # ==========================================================
 # Ask for Welcome Message
