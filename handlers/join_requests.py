@@ -50,9 +50,18 @@ async def auto_accept_join_request(client: Client, join_request: ChatJoinRequest
 
     if channel.get("welcome", True):
 
-        text = DEFAULT_WELCOME.format(
-            mention=user.mention
-        )
+    text = channel.get(
+        "welcome_text",
+        DEFAULT_WELCOME
+    )
+    
+    text = text.format(
+        mention=user.mention,
+        first_name=user.first_name or "",
+        last_name=user.last_name or "",
+        username=f"@{user.username}" if user.username else "None",
+        channel=join_request.chat.title
+    )
 
         try:
             welcome_message = await client.send_message(
