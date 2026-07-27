@@ -3,7 +3,6 @@ from pyrogram.types import Message
 
 from config import (
     FREE_CHANNEL_LIMIT,
-    PREMIUM_CHANNEL_LIMIT,
 )
 
 from database.models import (
