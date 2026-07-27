@@ -1,128 +1,112 @@
 import asyncio
 import logging
+import os
+import threading
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 import uvicorn
-from pyrogram import Client
 
-from config import (
-    API_ID,
-    API_HASH,
-    BOT_TOKEN,
-    PORT
-)
+from pyrogram import Client, idle
 
-from database.mongo import connect_db
-
-# ==========================
-# Logging
-# ==========================
+# Load .env (for local development)
+load_dotenv()
 
 logging.basicConfig(
     level=logging.INFO,
-    format="[%(asctime)s] %(levelname)s - %(name)s - %(message)s"
+    format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-logger = logging.getLogger("AutoJoinBot")
+# ==========================================
+# Telegram Client
+# ==========================================
 
+app = Client(
+    "AutoJoinRequestBot",
+    api_id=int(os.getenv("API_ID")),
+    api_hash=os.getenv("API_HASH"),
+    bot_token=os.getenv("BOT_TOKEN"),
+)
 
-# ==========================
+# ==========================================
+# Import Handlers
+# ==========================================
+
+import handlers.start
+import handlers.callbacks
+import handlers.channels
+import handlers.join_requests
+import handlers.settings
+import handlers.admin
+import handlers.owner
+import handlers.about
+import handlers.help
+import handlers.welcome
+
+# ==========================================
 # FastAPI
-# ==========================
+# ==========================================
 
-app = FastAPI()
-
-
-@app.get("/")
-async def home():
-    return {"status": "running"}
+web = FastAPI()
 
 
-@app.get("/health")
-async def health():
+@web.get("/")
+async def root():
     return {
-        "status": "ok",
+        "status": "running",
         "bot": "Auto Join Request Bot"
     }
 
 
-# ==========================
-# Telegram Bot
-# ==========================
-
-bot = Client(
-    "AutoJoinBot",
-    api_id=API_ID,
-    api_hash=API_HASH,
-    bot_token=BOT_TOKEN,
-)
+@web.get("/health")
+async def health():
+    return {
+        "status": "healthy"
+    }
 
 
-# ==========================
-# Load Handlers
-# ==========================
-
-def load_handlers():
-    from handlers import (
-        start,
-        admin,
-        owner,
-        channels,
-        join_requests,
-        settings,
-        callbacks,
-    )
-
-    logger.info("Handlers loaded successfully.")
+@web.get("/ping")
+async def ping():
+    return {
+        "message": "pong"
+    }
 
 
-# ==========================
-# Start Bot
-# ==========================
+def run_web():
+    port = int(os.environ.get("PORT", 10000))
 
-async def start_bot():
-    await connect_db()
-
-    load_handlers()
-
-    await bot.start()
-
-    me = await bot.get_me()
-
-    logger.info(f"Bot Started Successfully")
-    logger.info(f"Username : @{me.username}")
-    logger.info(f"Name     : {me.first_name}")
-
-    await asyncio.Event().wait()
-
-
-# ==========================
-# Run FastAPI
-# ==========================
-
-async def start_web():
-    config = uvicorn.Config(
-        app,
+    uvicorn.run(
+        web,
         host="0.0.0.0",
-        port=PORT,
-        log_level="info",
+        port=port,
+        log_level="info"
     )
 
-    server = uvicorn.Server(config)
 
-    await server.serve()
-
-
-# ==========================
+# ==========================================
 # Main
-# ==========================
+# ==========================================
 
 async def main():
-    await asyncio.gather(
-        start_bot(),
-        start_web(),
+
+    await app.start()
+
+    me = await app.get_me()
+
+    logging.info(
+        f"Bot Started Successfully -> @{me.username}"
     )
+
+    await idle()
+
+    await app.stop()
 
 
 if __name__ == "__main__":
+
+    threading.Thread(
+        target=run_web,
+        daemon=True
+    ).start()
+
     asyncio.run(main())
