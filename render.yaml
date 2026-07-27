@@ -50,7 +50,7 @@ services:
         sync: false
 
       - key: FREE_CHANNEL_LIMIT
-        value: 5
+        value: 999999
 
       - key: PREMIUM_CHANNEL_LIMIT
-        value: 50
+        value: 999999
