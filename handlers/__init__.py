@@ -12,6 +12,7 @@ from . import owner
 from . import about
 from . import help
 from . import broadcast
+from . import stats
 
 __all__ = [
     "start",
@@ -25,4 +26,5 @@ __all__ = [
     "help",
     "welcome",
     "broadcast",
+    "stats",
 ]
