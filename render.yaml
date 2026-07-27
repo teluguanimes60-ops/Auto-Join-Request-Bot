@@ -1,0 +1,56 @@
+services:
+  - type: web
+    name: auto-join-request-bot
+    runtime: python
+
+    plan: free
+
+    branch: main
+
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+
+    startCommand: |
+      python bot.py
+
+    autoDeploy: true
+
+    healthCheckPath: /health
+
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.11
+
+      - key: API_ID
+        sync: false
+
+      - key: API_HASH
+        sync: false
+
+      - key: BOT_TOKEN
+        sync: false
+
+      - key: MONGO_URI
+        sync: false
+
+      - key: OWNER_ID
+        sync: false
+
+      - key: BOT_USERNAME
+        sync: false
+
+      - key: BOT_NAME
+        value: Auto Join Request Bot
+
+      - key: LOG_CHANNEL
+        sync: false
+
+      - key: FORCE_SUB_CHANNEL
+        sync: false
+
+      - key: FREE_CHANNEL_LIMIT
+        value: 5
+
+      - key: PREMIUM_CHANNEL_LIMIT
+        value: 50
