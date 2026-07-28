@@ -13,9 +13,11 @@ from . import about
 from . import help
 from . import broadcast
 from . import stats
+from . import home
 
 __all__ = [
     "start",
+    "home",
     "callbacks",
     "channels",
     "join_requests",
