@@ -13,7 +13,7 @@ from database.models import (
 )
 
 
-@Client.on_message(filters.command("start"))
+@Client.on_message(filters.private & filters.command("start"))
 async def start_command(client, message):
 
     print("START COMMAND RECEIVED")
