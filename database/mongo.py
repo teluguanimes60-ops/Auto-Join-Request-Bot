@@ -10,7 +10,7 @@ users = None
 admins = None
 channels = None
 settings = None
-join_logs = None
+joins = None
 banned_users = None
 broadcast_logs = None
 
@@ -22,7 +22,7 @@ async def connect_db():
     global admins
     global channels
     global settings
-    global join_logs
+    global joins
     global banned_users
     global broadcast_logs
 
@@ -37,7 +37,7 @@ async def connect_db():
         admins = db["admins"]
         channels = db["channels"]
         settings = db["settings"]
-        join_logs = db["join_logs"]
+        joins = db["join_logs"]
         banned_users = db["banned_users"]
         broadcast_logs = db["broadcast_logs"]
 
