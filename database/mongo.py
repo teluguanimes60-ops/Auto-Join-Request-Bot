@@ -10,7 +10,7 @@ users = None
 admins = None
 channels = None
 settings = None
-joins = None
+join_logs = None
 banned_users = None
 broadcast_logs = None
 
@@ -22,7 +22,7 @@ async def connect_db():
     global admins
     global channels
     global settings
-    global joins
+    global join_logs
     global banned_users
     global broadcast_logs
 
@@ -37,13 +37,14 @@ async def connect_db():
         admins = db["admins"]
         channels = db["channels"]
         settings = db["settings"]
-        joins = db["join_logs"]
+        join_logs = db["join_logs"]
         banned_users = db["banned_users"]
         broadcast_logs = db["broadcast_logs"]
 
         await users.create_index("user_id", unique=True)
         await admins.create_index("user_id", unique=True)
         await channels.create_index("channel_id", unique=True)
+        await banned_users.create_index("user_id", unique=True)
 
         print("✅ MongoDB Connected Successfully")
 
