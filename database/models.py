@@ -4,8 +4,8 @@ from database.mongo import (
     users,
     channels,
     admins,
-    joins,
-    banned_users
+    join_logs,
+    banned_users,
 )
 
 
@@ -144,7 +144,7 @@ async def is_banned(user_id):
 
 async def log_join(channel_id, user_id):
 
-    await joins.insert_one(
+    join_logs.insert_one(
         {
             "channel_id": channel_id,
             "user_id": user_id,
@@ -163,5 +163,5 @@ async def get_stats():
         "users": await users.count_documents({}),
         "admins": await admins.count_documents({}),
         "channels": await channels.count_documents({}),
-        "joins": await joins.count_documents({})
+        "joins": await join_logs.count_documents({})
     }
