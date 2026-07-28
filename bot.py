@@ -97,6 +97,7 @@ async def main():
         f"Bot Started Successfully -> @{me.username}"
     )
 
+    print("BOT IS WAITING FOR UPDATES...")
     await idle()
 
     await app.stop()
