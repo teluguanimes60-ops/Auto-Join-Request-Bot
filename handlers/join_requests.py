@@ -14,6 +14,10 @@ from database.models import (
 )
 
 
+# ==========================================================
+# AUTO ACCEPT JOIN REQUEST
+# ==========================================================
+
 @Client.on_chat_join_request()
 async def auto_accept_join_request(client: Client, join_request: ChatJoinRequest):
     """
@@ -39,62 +43,70 @@ async def auto_accept_join_request(client: Client, join_request: ChatJoinRequest
         await join_request.approve()
 
     except Exception as e:
-        print(f"Join Request Error : {e}")
+        print(f"Join Request Error: {e}")
         return
 
     # Save Join Log
     await log_join(channel_id, user.id)
 
-    # Send Welcome Message
+    # Welcome Message
     welcome_message = None
 
     if channel.get("welcome", True):
 
-    text = channel.get(
-        "welcome_text",
-        DEFAULT_WELCOME
-    )
-    
-    text = text.format(
-        mention=user.mention,
-        first_name=user.first_name or "",
-        last_name=user.last_name or "",
-        username=f"@{user.username}" if user.username else "None",
-        channel=join_request.chat.title
-    )
+        text = channel.get(
+            "welcome_text",
+            DEFAULT_WELCOME
+        )
+
+        try:
+            text = text.format(
+                mention=user.mention,
+                first_name=user.first_name or "",
+                last_name=user.last_name or "",
+                username=f"@{user.username}" if user.username else "None",
+                channel=join_request.chat.title,
+            )
+        except Exception:
+            text = DEFAULT_WELCOME.format(
+                mention=user.mention,
+                first_name=user.first_name or "",
+                last_name=user.last_name or "",
+                username=f"@{user.username}" if user.username else "None",
+                channel=join_request.chat.title,
+            )
 
         try:
             welcome_message = await client.send_message(
                 chat_id=channel_id,
                 text=text,
             )
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Welcome Message Error: {e}")
 
     # Auto Delete Welcome Message
-    if (
-        welcome_message
-        and channel.get("auto_delete", False)
-    ):
+    if welcome_message and channel.get("auto_delete", False):
 
-        await asyncio.sleep(30)
+        delete_time = channel.get("delete_time", 30)
+
+        await asyncio.sleep(delete_time)
 
         try:
             await welcome_message.delete()
         except Exception:
             pass
 
-    # Log Channel
+    # Send Log
     if LOG_CHANNEL:
 
         try:
             await client.send_message(
                 LOG_CHANNEL,
                 (
-                    "✅ Join Request Accepted\n\n"
-                    f"👤 User : {user.mention}\n"
+                    "✅ **Join Request Accepted**\n\n"
+                    f"👤 User: {user.mention}\n"
                     f"🆔 `{user.id}`\n\n"
-                    f"📢 Channel : {join_request.chat.title}\n"
+                    f"📢 Channel: {join_request.chat.title}\n"
                     f"🆔 `{channel_id}`"
                 ),
             )
