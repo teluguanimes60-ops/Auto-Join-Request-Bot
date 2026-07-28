@@ -14,6 +14,7 @@ from . import help
 from . import broadcast
 from . import stats
 from . import home
+from . import force_sub
 
 __all__ = [
     "start",
