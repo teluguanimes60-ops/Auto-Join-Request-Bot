@@ -1,69 +1,94 @@
 from pyrogram import Client, filters
-from pyrogram.types import CallbackQuery
-
-from keyboards.buttons import (
-    start_buttons,
-    owner_buttons,
-)
-
-from database.models import (
-    get_stats,
+from pyrogram.types import (
+    CallbackQuery,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
 )
 
 from config import OWNER_ID
+from database.models import is_admin
 
 
 # ==========================================================
-# Ignore Button
+# Back to Home
 # ==========================================================
 
-@Client.on_callback_query(filters.regex("^ignore$"))
-async def ignore_callback(client, query: CallbackQuery):
+@Client.on_callback_query(filters.regex("^home$"))
+async def home_callback(client: Client, query: CallbackQuery):
 
-    await query.answer()
+    user = query.from_user
 
+    if user.id == OWNER_ID:
+        role = "👑 Owner"
+    elif await is_admin(user.id):
+        role = "🛡 Admin"
+    else:
+        role = "👤 User"
 
-# ==========================================================
-# Close
-# ==========================================================
+    text = f"""
+👋 Welcome {user.mention}
 
-@Client.on_callback_query(filters.regex("^close$"))
-async def close_callback(client, query: CallbackQuery):
+━━━━━━━━━━━━━━━━━━
 
-    await query.message.delete()
+Role : {role}
 
+Choose an option below.
 
-# ==========================================================
-# Back To Start
-# ==========================================================
+━━━━━━━━━━━━━━━━━━
+"""
 
-@Client.on_callback_query(filters.regex("^start$"))
-async def back_start(client, query: CallbackQuery):
+    buttons = [
+        [
+            InlineKeyboardButton(
+                "➕ Add Channel",
+                callback_data="add_channel"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                "📂 My Channels",
+                callback_data="my_channels"
+            ),
+            InlineKeyboardButton(
+                "⚙ Settings",
+                callback_data="settings"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                "📊 Statistics",
+                callback_data="stats"
+            ),
+            InlineKeyboardButton(
+                "ℹ Help",
+                callback_data="help"
+            )
+        ]
+    ]
+
+    if user.id == OWNER_ID:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    "👑 Owner Panel",
+                    callback_data="owner_panel"
+                )
+            ]
+        )
+
+    elif await is_admin(user.id):
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    "🛡 Admin Panel",
+                    callback_data="admin_panel"
+                )
+            ]
+        )
 
     await query.message.edit_text(
-        "🏠 **Main Menu**\n\n"
-        "Select an option below.",
-        reply_markup=start_buttons()
-    )
-
-
-# ==========================================================
-# About
-# ==========================================================
-
-@Client.on_callback_query(filters.regex("^about$"))
-async def about_callback(client, query: CallbackQuery):
-
-    await query.message.edit_text(
-        "🤖 **Auto Join Request Bot**\n\n"
-        "Automatically accepts Telegram join requests.\n\n"
-        "Supports:\n"
-        "• Multi Channels\n"
-        "• Welcome Messages\n"
-        "• Auto Delete\n"
-        "• Admin Panel\n"
-        "• Statistics",
-        reply_markup=start_buttons()
+        text,
+        reply_markup=InlineKeyboardMarkup(buttons)
     )
 
 
@@ -72,57 +97,80 @@ async def about_callback(client, query: CallbackQuery):
 # ==========================================================
 
 @Client.on_callback_query(filters.regex("^help$"))
-async def help_callback(client, query: CallbackQuery):
+async def help_callback(client: Client, query: CallbackQuery):
 
-    await query.message.edit_text(
-        "**How to use**\n\n"
-        "1. Add the bot as Admin.\n"
-        "2. Enable Join Requests.\n"
-        "3. Click Add Channel.\n"
-        "4. Send the Channel ID.\n"
-        "5. Done.",
-        reply_markup=start_buttons()
-    )
+    text = """
+❓ **Help**
 
+This bot automatically accepts Telegram Join Requests.
 
-# ==========================================================
-# Owner Panel
-# ==========================================================
+Steps:
 
-@Client.on_callback_query(filters.regex("^owner_panel$"))
-async def owner_panel(client, query: CallbackQuery):
+1. Add the bot as Admin.
+2. Enable Invite Requests.
+3. Add your channel.
+4. Done.
 
-    if query.from_user.id != OWNER_ID:
-
-        return await query.answer(
-            "Owner Only",
-            show_alert=True
-        )
-
-    await query.message.edit_text(
-        "👑 **Owner Panel**",
-        reply_markup=owner_buttons()
-    )
-
-
-# ==========================================================
-# Statistics
-# ==========================================================
-
-@Client.on_callback_query(filters.regex("^stats$"))
-async def stats_callback(client, query: CallbackQuery):
-
-    stats = await get_stats()
-
-    text = (
-        "📊 **Bot Statistics**\n\n"
-        f"👥 Users : {stats['users']}\n"
-        f"👮 Admins : {stats['admins']}\n"
-        f"📺 Channels : {stats['channels']}\n"
-        f"✅ Accepted : {stats['joins']}"
-    )
+The bot will automatically approve users.
+"""
 
     await query.message.edit_text(
         text,
-        reply_markup=start_buttons()
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        "⬅ Back",
+                        callback_data="home"
+                    )
+                ]
+            ]
+        )
     )
+
+
+# ==========================================================
+# About
+# ==========================================================
+
+@Client.on_callback_query(filters.regex("^about$"))
+async def about_callback(client: Client, query: CallbackQuery):
+
+    text = """
+🤖 **Auto Join Request Bot**
+
+Version : 1.0
+
+Features
+
+✅ Auto Accept
+✅ Welcome Message
+✅ Auto Delete
+✅ Multi Channel
+✅ Statistics
+✅ Admin Panel
+"""
+
+    await query.message.edit_text(
+        text,
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        "⬅ Back",
+                        callback_data="home"
+                    )
+                ]
+            ]
+        )
+    )
+
+
+# ==========================================================
+# Close
+# ==========================================================
+
+@Client.on_callback_query(filters.regex("^close$"))
+async def close_callback(client: Client, query: CallbackQuery):
+
+    await query.message.delete()
