@@ -38,9 +38,10 @@ BOT_USERNAME = os.getenv(
 )
 
 # ==========================================================
-# Channel Limits
+# Public Bot Settings
 # ==========================================================
 
+# Unlimited channels for everyone
 FREE_CHANNEL_LIMIT = int(
     os.getenv("FREE_CHANNEL_LIMIT", "999999")
 )
@@ -49,7 +50,9 @@ FREE_CHANNEL_LIMIT = int(
 # Channels
 # ==========================================================
 
-LOG_CHANNEL = int(os.getenv("LOG_CHANNEL", "0"))
+LOG_CHANNEL = int(
+    os.getenv("LOG_CHANNEL", "0")
+)
 
 FORCE_SUB_CHANNEL = int(
     os.getenv("FORCE_SUB_CHANNEL", "0")
@@ -83,4 +86,6 @@ BROADCAST_SLEEP = 0.08
 # Render
 # ==========================================================
 
-PORT = int(os.getenv("PORT", "10000"))
+PORT = int(
+    os.getenv("PORT", "10000")
+)
