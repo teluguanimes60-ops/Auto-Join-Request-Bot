@@ -1,9 +1,7 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
 
-from config import (
-    FREE_CHANNEL_LIMIT,
-)
+# No channel limit for public users
 
 from database.models import (
     add_channel,
