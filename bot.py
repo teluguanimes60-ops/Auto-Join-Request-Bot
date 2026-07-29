@@ -9,7 +9,8 @@ import uvicorn
 
 from pyrogram import Client, idle
 
-# Load .env (for local development)
+from database.mongo import connect_db
+
 load_dotenv()
 
 logging.basicConfig(
@@ -17,35 +18,26 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-# ==========================================
+# ==========================================================
 # Telegram Client
-# ==========================================
+# ==========================================================
 
 app = Client(
     "AutoJoinRequestBot",
     api_id=int(os.getenv("API_ID")),
     api_hash=os.getenv("API_HASH"),
-    bot_token=os.getenv("BOT_TOKEN"),
+    bot_token=os.getenv("BOT_TOKEN")
 )
 
-# ==========================================
-# Import Handlers
-# ==========================================
+# ==========================================================
+# Import All Handlers
+# ==========================================================
 
-import handlers.start
-import handlers.callbacks
-import handlers.channels
-import handlers.join_requests
-import handlers.settings
-import handlers.admin
-import handlers.owner
-import handlers.about
-import handlers.help
-import handlers.welcome
+import handlers
 
-# ==========================================
+# ==========================================================
 # FastAPI
-# ==========================================
+# ==========================================================
 
 web = FastAPI()
 
@@ -73,23 +65,33 @@ async def ping():
 
 
 def run_web():
-    port = int(os.environ.get("PORT", 10000))
-
     uvicorn.run(
         web,
         host="0.0.0.0",
-        port=port,
+        port=int(os.getenv("PORT", 10000)),
         log_level="info"
     )
 
 
-# ==========================================
+# ==========================================================
 # Main
-# ==========================================
+# ==========================================================
 
 async def main():
 
+    # Connect MongoDB
+    await connect_db()
+    logging.info("MongoDB Connected")
+
+    # Start Bot
     await app.start()
+
+    # Remove webhook if exists
+    try:
+        await app.delete_webhook()
+        logging.info("Webhook Deleted")
+    except Exception as e:
+        logging.info(f"Webhook: {e}")
 
     me = await app.get_me()
 
@@ -97,7 +99,8 @@ async def main():
         f"Bot Started Successfully -> @{me.username}"
     )
 
-    print("BOT IS WAITING FOR UPDATES...")
+    logging.info("Waiting for updates...")
+
     await idle()
 
     await app.stop()
