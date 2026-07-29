@@ -2,12 +2,11 @@ from datetime import datetime
 
 from database.mongo import (
     users,
-    channels,
     admins,
+    channels,
     join_logs,
     banned_users,
 )
-
 
 # ==========================================================
 # USERS
@@ -22,10 +21,10 @@ async def add_user(user):
                 "user_id": user.id,
                 "name": user.first_name,
                 "username": user.username,
-                "joined": datetime.utcnow()
+                "joined": datetime.utcnow(),
             }
         },
-        upsert=True
+        upsert=True,
     )
 
 
@@ -44,15 +43,17 @@ async def add_channel(chat):
                 "username": chat.username,
 
                 "auto_accept": True,
+
                 "welcome": True,
+
                 "welcome_text":
                 "👋 Welcome {mention} to {channel}!",
 
                 "auto_delete": False,
-                "delete_time": 30
+                "delete_time": 30,
             }
         },
-        upsert=True
+        upsert=True,
     )
 
 
@@ -65,13 +66,20 @@ async def get_channel(channel_id):
 
 async def all_channels():
 
-    return await channels.find().to_list(None)
+    return await channels.find().to_list(length=None)
+
+
+async def remove_channel(channel_id):
+
+    await channels.delete_one(
+        {"channel_id": channel_id}
+    )
 
 
 async def update_channel_setting(
     channel_id,
     key,
-    value
+    value,
 ):
 
     await channels.update_one(
@@ -92,8 +100,12 @@ async def add_admin(user_id):
 
     await admins.update_one(
         {"user_id": user_id},
-        {"$set": {"user_id": user_id}},
-        upsert=True
+        {
+            "$set": {
+                "user_id": user_id
+            }
+        },
+        upsert=True,
     )
 
 
@@ -119,8 +131,12 @@ async def ban_user(user_id):
 
     await banned_users.update_one(
         {"user_id": user_id},
-        {"$set": {"user_id": user_id}},
-        upsert=True
+        {
+            "$set": {
+                "user_id": user_id
+            }
+        },
+        upsert=True,
     )
 
 
@@ -144,17 +160,17 @@ async def is_banned(user_id):
 
 async def log_join(channel_id, user_id):
 
-    join_logs.insert_one(
+    await join_logs.insert_one(
         {
             "channel_id": channel_id,
             "user_id": user_id,
-            "time": datetime.utcnow()
+            "time": datetime.utcnow(),
         }
     )
 
 
 # ==========================================================
-# STATISTICS
+# STATS
 # ==========================================================
 
 async def get_stats():
@@ -163,5 +179,5 @@ async def get_stats():
         "users": await users.count_documents({}),
         "admins": await admins.count_documents({}),
         "channels": await channels.count_documents({}),
-        "joins": await join_logs.count_documents({})
+        "joins": await join_logs.count_documents({}),
     }
