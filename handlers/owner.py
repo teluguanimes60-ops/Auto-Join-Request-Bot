@@ -1,3 +1,5 @@
+import os
+
 from pyrogram import Client, filters
 from pyrogram.types import (
     Message,
@@ -6,6 +8,7 @@ from pyrogram.types import (
 )
 
 from config import OWNER_ID
+
 from database.models import (
     add_admin,
     remove_admin,
@@ -20,72 +23,83 @@ from database.mongo import (
 )
 
 
-# ==========================================
+# ==========================================================
 # Owner Filter
-# ==========================================
+# ==========================================================
 
 def owner_only(func):
     async def wrapper(client, message):
         if message.from_user.id != OWNER_ID:
             return
+
         return await func(client, message)
+
     return wrapper
 
 
-# ==========================================
+# ==========================================================
 # Owner Panel
-# ==========================================
+# ==========================================================
 
 @Client.on_message(filters.private & filters.command("owner"))
 @owner_only
 async def owner_panel(client: Client, message: Message):
+
+    stats = await get_stats()
+
+    text = f"""
+👑 Owner Control Panel
+
+━━━━━━━━━━━━━━━━━━
+
+👥 Users      : {stats['users']}
+🛡 Admins     : {stats['admins']}
+📢 Channels   : {stats['channels']}
+✅ Join Logs  : {stats['joins']}
+
+━━━━━━━━━━━━━━━━━━
+"""
 
     keyboard = InlineKeyboardMarkup(
         [
             [
                 InlineKeyboardButton(
                     "👥 Users",
-                    callback_data="owner_users"
+                    callback_data="owner_users",
                 ),
                 InlineKeyboardButton(
                     "🛡 Admins",
-                    callback_data="owner_admins"
-                )
+                    callback_data="owner_admins",
+                ),
             ],
             [
                 InlineKeyboardButton(
-                    "📢 Broadcast",
-                    callback_data="broadcast"
+                    "📊 Statistics",
+                    callback_data="stats",
                 ),
                 InlineKeyboardButton(
-                    "📊 Statistics",
-                    callback_data="stats"
-                )
+                    "📢 Broadcast",
+                    callback_data="broadcast",
+                ),
             ],
             [
                 InlineKeyboardButton(
                     "🚫 Banned Users",
-                    callback_data="banned_users"
+                    callback_data="banned_users",
                 )
             ],
-            [
-                InlineKeyboardButton(
-                    "⚙ Settings",
-                    callback_data="owner_settings"
-                )
-            ]
         ]
     )
 
     await message.reply_text(
-        "👑 **Owner Control Panel**",
-        reply_markup=keyboard
+        text,
+        reply_markup=keyboard,
     )
 
 
-# ==========================================
-# Add Admin
-# ==========================================
+# ==========================================================
+# Promote Admin
+# ==========================================================
 
 @Client.on_message(filters.private & filters.command("promote"))
 @owner_only
@@ -96,18 +110,25 @@ async def promote_admin(client, message):
             "Usage:\n/promote USER_ID"
         )
 
-    user_id = int(message.command[1])
+    try:
+        user_id = int(message.command[1])
+
+    except ValueError:
+
+        return await message.reply_text(
+            "Invalid User ID."
+        )
 
     await add_admin(user_id)
 
     await message.reply_text(
-        "✅ Admin added successfully."
+        f"✅ {user_id} promoted successfully."
     )
 
 
-# ==========================================
-# Remove Admin
-# ==========================================
+# ==========================================================
+# Demote Admin
+# ==========================================================
 
 @Client.on_message(filters.private & filters.command("demote"))
 @owner_only
@@ -118,7 +139,20 @@ async def demote_admin(client, message):
             "Usage:\n/demote USER_ID"
         )
 
-    user_id = int(message.command[1])
+    try:
+        user_id = int(message.command[1])
+
+    except ValueError:
+
+        return await message.reply_text(
+            "Invalid User ID."
+        )
+
+    if user_id == OWNER_ID:
+
+        return await message.reply_text(
+            "❌ Owner cannot be removed."
+        )
 
     await remove_admin(user_id)
 
@@ -127,9 +161,9 @@ async def demote_admin(client, message):
     )
 
 
-# ==========================================
+# ==========================================================
 # Database Statistics
-# ==========================================
+# ==========================================================
 
 @Client.on_message(filters.private & filters.command("dbstats"))
 @owner_only
@@ -142,96 +176,88 @@ async def db_stats(client, message):
     text = f"""
 📊 Database Statistics
 
-👥 Users : {stats['users']}
-
-🛡 Admins : {stats['admins']}
-
-📢 Channels : {stats['channels']}
-
-✅ Accepted : {stats['joins']}
-
-🚫 Banned : {banned}
+👥 Users      : {stats['users']}
+🛡 Admins     : {stats['admins']}
+📢 Channels   : {stats['channels']}
+✅ Join Logs  : {stats['joins']}
+🚫 Banned     : {banned}
 """
 
     await message.reply_text(text)
 
 
-# ==========================================
+# ==========================================================
 # Export Users
-# ==========================================
+# ==========================================================
 
 @Client.on_message(filters.private & filters.command("export_users"))
 @owner_only
 async def export_users(client, message):
 
-    text = ""
+    filename = "users.txt"
 
-    async for user in users.find():
+    with open(filename, "w", encoding="utf-8") as f:
 
-        text += f"{user['user_id']}\n"
+        async for user in users.find():
 
-    if not text:
-        text = "No users found."
-
-    with open("users.txt", "w") as f:
-        f.write(text)
+            f.write(f"{user.get('user_id')}\n")
 
     await message.reply_document(
-        "users.txt",
-        caption="👥 User Database"
+        filename,
+        caption="👥 User Database",
     )
 
+    os.remove(filename)
 
-# ==========================================
+
+# ==========================================================
 # Export Channels
-# ==========================================
+# ==========================================================
 
 @Client.on_message(filters.private & filters.command("export_channels"))
 @owner_only
 async def export_channels(client, message):
 
-    text = ""
+    filename = "channels.txt"
 
-    async for ch in channels.find():
+    with open(filename, "w", encoding="utf-8") as f:
 
-        text += (
-            f"{ch['title']} | "
-            f"{ch['channel_id']}\n"
-        )
+        async for ch in channels.find():
 
-    if not text:
-        text = "No channels."
-
-    with open("channels.txt", "w") as f:
-        f.write(text)
+            f.write(
+                f"{ch.get('title','Unknown')} | "
+                f"{ch.get('channel_id')}\n"
+            )
 
     await message.reply_document(
-        "channels.txt",
-        caption="📢 Channels"
+        filename,
+        caption="📢 Channels",
     )
 
+    os.remove(filename)
 
-# ==========================================
+
+# ==========================================================
 # Export Admins
-# ==========================================
+# ==========================================================
 
 @Client.on_message(filters.private & filters.command("export_admins"))
 @owner_only
 async def export_admins(client, message):
 
-    text = ""
+    filename = "admins.txt"
 
-    async for admin in admins.find():
+    with open(filename, "w", encoding="utf-8") as f:
 
-        text += f"{admin['user_id']}\n"
+        async for admin in admins.find():
 
-    if not text:
-        text = "No admins."
-
-    with open("admins.txt", "w") as f:
-        f.write(text)
+            f.write(
+                f"{admin.get('user_id')}\n"
+            )
 
     await message.reply_document(
-        "admins.txt",
-        caption="🛡 Admin List"
+        filename,
+        caption="🛡 Admin List",
     )
+
+    os.remove(filename)
