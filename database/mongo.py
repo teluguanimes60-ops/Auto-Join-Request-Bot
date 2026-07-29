@@ -1,6 +1,5 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import ConnectionFailure
-
 from config import MONGO_URI
 
 client = None
@@ -27,7 +26,13 @@ async def connect_db():
     global broadcast_logs
 
     try:
-        client = AsyncIOMotorClient(MONGO_URI)
+        client = AsyncIOMotorClient(
+            MONGO_URI,
+            serverSelectionTimeoutMS=10000,
+            connectTimeoutMS=10000,
+            socketTimeoutMS=10000,
+            maxPoolSize=50,
+        )
 
         await client.admin.command("ping")
 
@@ -44,7 +49,6 @@ async def connect_db():
         await users.create_index("user_id", unique=True)
         await admins.create_index("user_id", unique=True)
         await channels.create_index("channel_id", unique=True)
-        await banned_users.create_index("user_id", unique=True)
 
         print("✅ MongoDB Connected Successfully")
 
