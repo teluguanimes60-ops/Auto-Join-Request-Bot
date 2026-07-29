@@ -1,80 +1,70 @@
 """
-User State Manager
+State Manager
+Stores temporary user states in memory.
 """
 
-from typing import Dict, Any
-
-# ==========================================
-# In-Memory User States
-# ==========================================
-
-_user_states: Dict[int, Dict[str, Any]] = {}
+USER_STATES = {}
 
 
-# ==========================================
+# ==========================================================
 # Set State
-# ==========================================
+# ==========================================================
 
 def set_state(user_id: int, state: str, data=None):
-
-    _user_states[user_id] = {
+    USER_STATES[user_id] = {
         "state": state,
-        "data": data
+        "data": data or {}
     }
 
 
-# ==========================================
+# ==========================================================
 # Get State
-# ==========================================
+# ==========================================================
 
 def get_state(user_id: int):
+    state = USER_STATES.get(user_id)
 
-    return _user_states.get(user_id)
+    if not state:
+        return None
 
-
-# ==========================================
-# Get State Name
-# ==========================================
-
-def get_state_name(user_id: int):
-
-    state = _user_states.get(user_id)
-
-    if state:
-        return state["state"]
-
-    return None
+    return state["state"]
 
 
-# ==========================================
+# ==========================================================
 # Get State Data
-# ==========================================
+# ==========================================================
 
 def get_state_data(user_id: int):
+    state = USER_STATES.get(user_id)
 
-    state = _user_states.get(user_id)
+    if not state:
+        return {}
 
-    if state:
-        return state["data"]
-
-    return None
+    return state["data"]
 
 
-# ==========================================
+# ==========================================================
+# Has State
+# ==========================================================
+
+def has_state(user_id: int):
+    return user_id in USER_STATES
+
+
+# ==========================================================
 # Clear State
-# ==========================================
+# ==========================================================
 
 def clear_state(user_id: int):
+    USER_STATES.pop(user_id, None)
 
-    _user_states.pop(user_id, None)
 
+# ==========================================================
+# Update State Data
+# ==========================================================
 
-# ==========================================
-# Check State
-# ==========================================
+def update_state_data(user_id: int, **kwargs):
+    if user_id not in USER_STATES:
+        return
 
-def has_state(user_id: int, state: str):
-
-    current = get_state_name(user_id)
-
-    return current == state
+    USER_STATES[user_id]["data"].update(kwargs)
