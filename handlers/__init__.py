@@ -2,6 +2,7 @@
 Auto Join Request Bot
 Handlers Package
 """
+
 from . import start
 from . import callbacks
 from . import channels
@@ -11,6 +12,7 @@ from . import admin
 from . import owner
 from . import about
 from . import help
+from . import welcome
 from . import broadcast
 from . import stats
 from . import home
@@ -18,7 +20,6 @@ from . import force_sub
 
 __all__ = [
     "start",
-    "home",
     "callbacks",
     "channels",
     "join_requests",
@@ -30,4 +31,6 @@ __all__ = [
     "welcome",
     "broadcast",
     "stats",
+    "home",
+    "force_sub",
 ]
