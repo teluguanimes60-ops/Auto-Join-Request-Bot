@@ -1,18 +1,17 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
 
-# No channel limit for public users
-
 from database.models import (
     add_channel,
     get_channel,
-    all_channels,
 )
 
+from database.mongo import channels
 
-# ==========================================
-# Add Channel (Forward Channel Message)
-# ==========================================
+
+# ==========================================================
+# Add Channel
+# ==========================================================
 
 @Client.on_message(filters.private & filters.forwarded)
 async def add_channel_handler(client: Client, message: Message):
@@ -25,19 +24,19 @@ async def add_channel_handler(client: Client, message: Message):
     if chat.type.name != "CHANNEL":
         return
 
-    # Check if already added
+    # Already added
     if await get_channel(chat.id):
         return await message.reply_text(
-            "⚠️ This channel is already added."
+            "⚠️ This channel is already registered."
         )
 
-    # Check bot permissions
+    # Check bot admin
     try:
         bot = await client.get_me()
         member = await client.get_chat_member(chat.id, bot.id)
     except Exception:
         return await message.reply_text(
-            "❌ Please add me as an administrator first."
+            "❌ Add me as an administrator first."
         )
 
     if member.status.name != "ADMINISTRATOR":
@@ -45,86 +44,85 @@ async def add_channel_handler(client: Client, message: Message):
             "❌ I must be an administrator."
         )
 
-    privileges = member.privileges
-
-    if not privileges or not privileges.can_manage_chat:
+    if (
+        not member.privileges
+        or not member.privileges.can_manage_chat
+    ):
         return await message.reply_text(
-            "❌ Please give me **Manage Chat** permission."
+            "❌ Please give me Manage Chat permission."
         )
 
-    # Free limit
-    user_channels = [
-        x for x in await all_channels()
-        if x.get("owner_id") == message.from_user.id
-    ]
-
-    # Unlimited channels for everyone
-    pass
-
     # Save channel
-    await add_channel(chat)
+    await add_channel(chat, owner_id=message.from_user.id)
 
-    from database.mongo import channels
-
-    await channels.update_one(
-        {"channel_id": chat.id},
-        {
-            "$set": {
-                "owner_id": message.from_user.id
-            }
-        }
-    )
-
-    text = f"""
+    await message.reply_text(
+        f"""
 ✅ Channel Added Successfully
 
-📢 {chat.title}
+📢 **{chat.title}**
 
-ID:
-`{chat.id}`
+🆔 `{chat.id}`
 
-Auto Accept : ✅ Enabled
-Welcome Message : ✅ Enabled
-Auto Delete : ❌ Disabled
+━━━━━━━━━━━━━━━━━━
+
+✅ Auto Accept : Enabled
+
+✅ Welcome Message : Enabled
+
+❌ Auto Delete : Disabled
+
+🚫 Force Subscribe : Disabled
+
+━━━━━━━━━━━━━━━━━━
+
+Use /channels to manage your channels.
 """
+    )
 
-    await message.reply_text(text)
 
-
-# ==========================================
-# List My Channels
-# ==========================================
+# ==========================================================
+# My Channels
+# ==========================================================
 
 @Client.on_message(filters.private & filters.command("channels"))
 async def my_channels(client: Client, message: Message):
 
-    data = [
-        x for x in await all_channels()
-        if x.get("owner_id") == message.from_user.id
-    ]
+    data = await channels.find(
+        {
+            "owner_id": message.from_user.id
+        }
+    ).to_list(length=None)
 
     if not data:
         return await message.reply_text(
-            "You haven't added any channels yet."
+            "❌ You haven't added any channels."
         )
 
     text = "📂 **Your Channels**\n\n"
 
     for i, ch in enumerate(data, start=1):
+
         text += (
             f"{i}. {ch['title']}\n"
-            f"`{ch['channel_id']}`\n\n"
+            f"🆔 `{ch['channel_id']}`\n"
         )
+
+        if ch.get("force_sub"):
+            text += "🚫 Force Subscribe : ON\n"
+        else:
+            text += "🚫 Force Subscribe : OFF\n"
+
+        text += "\n"
 
     await message.reply_text(text)
 
 
-# ==========================================
+# ==========================================================
 # Remove Channel
-# ==========================================
+# ==========================================================
 
 @Client.on_message(filters.private & filters.command("remove"))
-async def remove_channel(client: Client, message: Message):
+async def remove_channel_cmd(client: Client, message: Message):
 
     if len(message.command) != 2:
         return await message.reply_text(
@@ -138,8 +136,6 @@ async def remove_channel(client: Client, message: Message):
             "Invalid Channel ID."
         )
 
-    from database.mongo import channels
-
     channel = await channels.find_one(
         {
             "channel_id": channel_id,
@@ -149,11 +145,13 @@ async def remove_channel(client: Client, message: Message):
 
     if not channel:
         return await message.reply_text(
-            "Channel not found."
+            "❌ Channel not found."
         )
 
     await channels.delete_one(
-        {"channel_id": channel_id}
+        {
+            "channel_id": channel_id
+        }
     )
 
     await message.reply_text(
